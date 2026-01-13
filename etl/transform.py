@@ -1,9 +1,13 @@
 from datetime import datetime, timezone
+from etl.logger import setup_logger
+
 
 def transform_weather_data(raw_data: dict) -> dict:
     """
     Transform raw OpenWeather API response into a clean, flat structure
     """
+    logger = setup_logger()
+    logger.info("Transforming raw weather data")
 
     transformed = {
         "city": raw_data.get("name"),
@@ -18,10 +22,12 @@ def transform_weather_data(raw_data: dict) -> dict:
         "extracted_at": raw_data.get("extracted_at"),
     }
 
+    logger.info("Weather data transformed successfully")
     return transformed
 
+
 if __name__ == "__main__":
-    from extract import extract_weather_data
+    from etl.extract import extract_weather_data
 
     raw = extract_weather_data("Jakarta")
     transformed = transform_weather_data(raw)

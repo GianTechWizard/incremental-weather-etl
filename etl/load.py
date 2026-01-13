@@ -5,6 +5,8 @@ from etl.metadata import (
     get_last_processed_timestamp,
     update_last_processed_timestamp,
 )
+from etl.logger import setup_logger
+
 
 def get_engine():
     return create_engine(
@@ -12,7 +14,11 @@ def get_engine():
         f"@{DB_CONFIG['host']}:{DB_CONFIG['port']}/{DB_CONFIG['database']}"
     )
 
+
 def load_weather_data(df):
+    logger = setup_logger()
+    logger.info("Starting load process")
+
     engine = get_engine()
     last_ts = get_last_processed_timestamp()
 
@@ -21,7 +27,7 @@ def load_weather_data(df):
     df_new = df[df["extracted_at"] > last_ts]
 
     if df_new.empty:
-        print("No new data to load.")
+        logger.info("No new data to load")
         return
 
     df_new.to_sql(
@@ -35,7 +41,8 @@ def load_weather_data(df):
     latest_ts = df_new["extracted_at"].max()
     update_last_processed_timestamp(latest_ts)
 
-    print(f"{len(df_new)} new records loaded.")
+    logger.info(f"{len(df_new)} new records loaded successfully")
+
 
 if __name__ == "__main__":
     from etl.extract import extract_weather_data
