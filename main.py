@@ -38,7 +38,7 @@ def transform_task(raw_data):
 
     if not is_valid:
         logger.error(f"Data validation failed: {errors}")
-        raise ValueError(f"Validation failed: {errors}")  # 🔥 WAJIB untuk Airflow
+        raise ValueError(f"Validation failed: {errors}")
 
     return record
 
@@ -56,6 +56,10 @@ def load_task(record):
     logger.info("=== ETL PIPELINE FINISHED SUCCESSFULLY ===")
     return True
 
+
+# =========================
+# STANDALONE ETL (NON-AIRFLOW)
+# =========================
 def run_etl(city: str = "Jakarta"):
     logger = setup_logger()
     logger.info("=== START WEATHER INCREMENTAL ETL PIPELINE ===")
