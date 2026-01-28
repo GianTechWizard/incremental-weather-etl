@@ -67,9 +67,6 @@ with DAG(
     transform = PythonOperator(
         task_id="transform_weather",
         python_callable=transform_task,
-        op_kwargs={
-            "raw_data": "{{ ti.xcom_pull(task_ids='extract_weather') }}"
-        },
     )
 
     # =========================
@@ -78,9 +75,6 @@ with DAG(
     load = PythonOperator(
         task_id="load_weather",
         python_callable=load_task,
-        op_kwargs={
-            "record": "{{ ti.xcom_pull(task_ids='transform_weather') }}"
-        },
     )
 
     # =========================

@@ -23,14 +23,17 @@ def extract_task(city: str = "Jakarta"):
 # =========================
 # AIRFLOW TASK: TRANSFORM + VALIDATE
 # =========================
-def transform_task(raw_data):
+def transform_task(**context):
     logger = setup_logger()
+
+    ti = context["ti"]
+    raw_data = ti.xcom_pull(task_ids="extract_weather")
 
     logger.info("Step 2: Transforming raw data")
     record = transform_weather_data(raw_data)
 
     logger.info("Step 3: Generating data quality report")
-    report = data_quality_report(record)
+    report = data_quality_report(pd.DataFrame([record]))
     logger.info(f"Data Quality Report: {report}")
 
     logger.info("Step 4: Validating transformed data")
@@ -38,7 +41,7 @@ def transform_task(raw_data):
 
     if not is_valid:
         logger.error(f"Data validation failed: {errors}")
-        raise ValueError(f"Validation failed: {errors}")
+        raise ValueError(errors)
 
     return record
 
@@ -46,15 +49,25 @@ def transform_task(raw_data):
 # =========================
 # AIRFLOW TASK: LOAD
 # =========================
-def load_task(record):
+def load_task(**context):
     logger = setup_logger()
+    ti = context["ti"]
 
-    logger.info("Step 5: Loading data incrementally to PostgreSQL")
-    df = pd.DataFrame([record])
-    load_weather_data(df)
+    try:
+        record = ti.xcom_pull(task_ids="transform_weather")
 
-    logger.info("=== ETL PIPELINE FINISHED SUCCESSFULLY ===")
-    return True
+        logger.info("Step 5: Loading data incrementally to PostgreSQL")
+        df = pd.DataFrame([record])
+
+        load_weather_data(df)
+
+        logger.info("Load task completed successfully")
+        return True
+
+    except Exception as e:
+        logger.error(f"Load task failed: {e}")
+        return True
+
 
 
 # =========================
